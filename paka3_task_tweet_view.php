@@ -34,7 +34,21 @@ class Paka3_task_tweet_view{
 
 			//6.ツイート
 			$tweet = $val->text;
+
 			$tweet = mb_ereg_replace('(https?://[-_.!~*\'()a-zA-Z0-9;/?:@&=+$,%#]+)', '<a href="\1" target="_blank">\1</a>', $tweet);
+			//絵文字→*
+			//reject overly long 2 byte sequences, as well as characters above U+10000 and replace with ?
+			$tweet = preg_replace('/[\x00-\x08\x10\x0B\x0C\x0E-\x19\x7F]'.
+			 '|[\x00-\x7F][\x80-\xBF]+'.
+			 '|([\xC0\xC1]|[\xF0-\xFF])[\x80-\xBF]*'.
+			 '|[\xC2-\xDF]((?![\x80-\xBF])|[\x80-\xBF]{2,})'.
+			 '|[\xE0-\xEF](([\x80-\xBF](?![\x80-\xBF]))|(?![\x80-\xBF]{2})|[\x80-\xBF]{3,})/S',
+			 '*', $tweet ); 
+			//reject overly long 3 byte sequences and UTF-16 surrogates and replace with ?
+			$tweet = preg_replace('/\xE0[\x80-\x9F][\x80-\xBF]'.
+			 '|\xED[\xA0-\xBF][\x80-\xBF]/S','*', $tweet );
+
+
 			//7.RT
 			$rt = $val->retweet_count;
 			$t_id = $val->id_str;
@@ -55,7 +69,7 @@ class Paka3_task_tweet_view{
 						<li>{$img}</li>
 						<li class="profile"><a rel="nofollow" href="{$user_url}">{$p_img}{$user_name}<b>{$user_account}</b></a></li>
 						<li class="tweet">{$tweet}<a href="{$link}" rel="nofollow" class="date">{$date}</a></li>
-					</ul>
+					</ul></li>
 EOS;
 			}elseif( $flag['imgMode'] == 1 ) {
 				$str =<<< EOS
@@ -66,7 +80,8 @@ EOS;
 		//1日の範囲か精査
 		$f_date = strtotime('-1day',$new_post_date);
 		$l_date = $new_post_date;
-
+			$ndate = date( 'Y年m月d日 H:i', 
+							strtotime( -1*$t_zone.'hour',  $new_post_date ) );
 			if( isset($str) 
 				&& $flag[ 'count' ] > $count
 				&& strtotime( -1*$t_zone."hour", $f_date )<= strtotime( $val->created_at ) 
@@ -79,7 +94,7 @@ EOS;
 				$count += 1;
 			}
 		}
-		return $html = "<ul class='paka3Tweet'>".implode( '', $html )."</ul>";
+		return $html = "<ul class='paka3Tweet'>".$ndate.implode( '', $html )."</ul>";
 			
 	}
 

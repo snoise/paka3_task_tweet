@@ -29,7 +29,7 @@ class Paka3_task_tweet{
 	//ここまで
 	
 	//ツイートの検索設定
-	private $word = '臼杵 OR 臼杵市 OR うすき OR 臼高  filter:images -RT' ; //(RTをのぞく場合 -RT)
+	private $word = '#usuki OR 臼杵 filter:images -RT' ; //(RTをのぞく場合 -RT)
 //最後に書くよ
 //filter:images　画像ツイートを抽出、
 //filter:news　ニュース引用ツイートを抽出、
@@ -37,13 +37,13 @@ class Paka3_task_tweet{
 //filter:videos　動画ツイートを抽出。
 
 	private $lang = "ja" ;
-	private $imgMode = 1 ; //:0普通/1画像一覧表示
+	private $imgMode = 0 ; //:0普通/1画像一覧表示
 	private $sort    = "asc" ;
 
 	//やっぱり最大値はいるよツイート
 	private $tweet_count     = 100; //ツイートの最大表示数(あくまでも表示)
-	private $tweet_api_limit = 1; //titter apiのアクセスリミット：１００ツイート(RTも含む)/1回、通常180回/15分
-	private $tweet_day_limit = 3; //一度に追加できる記事数（現在の日時よりさかのぼる日数）
+	private $tweet_api_limit = 6; //titter apiのアクセスリミット：１００ツイート(RTも含む)/1回、通常180回/15分
+	private $tweet_day_limit = 5; //一度に追加できる記事数（現在の日時よりさかのぼる日数）
 	//Twitter API
 	/*
 	private $apiKey = 'zSmBXlxEoaTrwOX23Hdtbrt0W' ;
@@ -182,7 +182,7 @@ class Paka3_task_tweet{
 											strtotime( -1*$this->t_zone."hour - 2day", $new_post_date  ) );//15:00
 		//現在ある記事の次日（今から投稿する日付）
 		$untilDate = date( "Y-m-d", 
-											strtotime( -1*$this->t_zone."hour", $new_post_date ) );
+											strtotime( -1*$this->t_zone."hour + 1day", $new_post_date ) );
 
 
 		//######################

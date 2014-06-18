@@ -22,6 +22,7 @@ class Paka3_task_tweet{
 	private $t = "00:35:00" ;
 	private $catID = "" ;
 
+	private $post_statur = 'draft'; //下書き
 	//カスタムタクソノミーのとき(ないときはコメントアウトしてよい)
 	private $post_type = "lives"; //デフォルト：post/page/カスタムタクソノミー
 	private $tax_cat = "lives-cat";
@@ -45,16 +46,12 @@ class Paka3_task_tweet{
 	private $tweet_api_limit = 6; //titter apiのアクセスリミット：１００ツイート(RTも含む)/1回、通常180回/15分
 	private $tweet_day_limit = 5; //一度に追加できる記事数（現在の日時よりさかのぼる日数）
 	//Twitter API
-	/*
-	private $apiKey = 'zSmBXlxEoaTrwOX23Hdtbrt0W' ;
-	private $apiSecret = 'TPORUQAxuTsicmje6mESheJZ3DkJ1ZoLpz7LsjANKHyyfSMYdN' ;
-	private $accessToken = '1098563582-aQ7ngZjfCw0eHkph3cdItRmpyEcOHdSEnmDTkZT' ;
-	private $accessTokenSecret = 'KUReVeDvn8CyWzDbkiCAi7xiw6dHAI0BCJH4Tihu0tXHN' ;
-*/
-	private $apiKey = '9qNoNnHgRqfQ3FU2M0kDRj7vL' ;
-	private $apiSecret = 'wi6jCMOHYhpHFgooW9PCI9YwL7hQurocZuw6GCVLedgMfXqQj2' ;
-	private $accessToken = '1098563582-eLb4iZ0lpDgz7fxeoLmlaFivKwLrv4eAREydsuo' ;
-	private $accessTokenSecret = 'ksHNdcJnKM5qbiwM9pbfLbnYWd2mChn9156Q5ERWBX5oq' ;
+
+	private $apiKey = '' ;
+	private $apiSecret = '' ;
+	private $accessToken = '' ;
+	private $accessTokenSecret = '' ;
+
 
 	//時差
 	private $t_zone ;
@@ -137,9 +134,10 @@ class Paka3_task_tweet{
 				$title = date( 'Y月m日d日のつぶやき',  $new_post_date  );
 				$html = $this->myTweet( $new_post_date  );
 			  
-			  $newPost = array ('title'    => $title,
-			  									'post_date' => $new_post_datetime,
-												  'content' => $html,
+			  $newPost = array ('title'       => $title,
+			  									'post_date'   => $new_post_datetime,
+			  									'post_status' => $this->post_status,
+												  'content'     => $html,
 												  'post_type' => $this->post_type,
 												  'tax_cat'   => $this->tax_cat,
 												  'tax_ids'   => $this->tax_ids);
@@ -179,7 +177,7 @@ class Paka3_task_tweet{
 
 		//現在ある記事の前日
 		$sinceDate = date( "Y-m-d", 
-											strtotime( -1*$this->t_zone."hour - 2day", $new_post_date  ) );//15:00
+											strtotime( -1*$this->t_zone."hour - 1day", $new_post_date  ) );//15:00
 		//現在ある記事の次日（今から投稿する日付）
 		$untilDate = date( "Y-m-d", 
 											strtotime( -1*$this->t_zone."hour + 1day", $new_post_date ) );

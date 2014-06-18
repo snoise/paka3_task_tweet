@@ -39,7 +39,7 @@ class Paka3_post_lib{
 		$my_post = array( );
 		$my_post[ 'post_title' ] = $post['title'];
 		$my_post[ 'post_content' ] =  str_replace(array("\r\n","\r","\n"), '', $post['content']);
-		$my_post[ 'post_status' ] = 'draft'; //下書き
+		$my_post[ 'post_status' ] = $post[ 'draft' ]; //下書き
 		$my_post[ 'post_author' ] = 1;
 		$my_post[ 'post_name' ] = date( 'YmdHi_tweet' ,strtotime($post['post_date'] ) ) ;//slug
 		$my_post[ 'post_date' ] = $post['post_date'];

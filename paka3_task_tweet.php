@@ -21,11 +21,22 @@ class Paka3_task_tweet{
 
 	//インスタンス変数（設定）
 	//Twitter API
+	/*
+	private $apiKey = 'zSmBXlxEoaTrwOX23Hdtbrt0W' ;
+	private $apiSecret = 'TPORUQAxuTsicmje6mESheJZ3DkJ1ZoLpz7LsjANKHyyfSMYdN' ;
+	private $accessToken = '1098563582-aQ7ngZjfCw0eHkph3cdItRmpyEcOHdSEnmDTkZT' ;
+	private $accessTokenSecret = 'KUReVeDvn8CyWzDbkiCAi7xiw6dHAI0BCJH4Tihu0tXHN' ;
+*/
+	private $apiKey = '9qNoNnHgRqfQ3FU2M0kDRj7vL' ;
+	private $apiSecret = 'wi6jCMOHYhpHFgooW9PCI9YwL7hQurocZuw6GCVLedgMfXqQj2' ;
+	private $accessToken = '1098563582-eLb4iZ0lpDgz7fxeoLmlaFivKwLrv4eAREydsuo' ;
+	private $accessTokenSecret = 'ksHNdcJnKM5qbiwM9pbfLbnYWd2mChn9156Q5ERWBX5oq' ;
+/*
 	private $apiKey = '' ;
 	private $apiSecret = '' ;
 	private $accessToken = '' ;
 	private $accessTokenSecret = '' ;
-
+*/
 
 	//[設定]ツイートの検索設定
 	private $word = '#usuki OR 臼杵 filter:images -RT' ; 
@@ -37,18 +48,20 @@ class Paka3_task_tweet{
 	//filter:videos　動画ツイートを抽出。
 
 	//[設定]実行スケジュール
-	private $t = "00:35:00" ;
+	private $t = "11:30:00" ;
 
 	//[設定]タイトルと状態
-	private $post_title = 'きょうのつぶやき'; //タイトル
+	private $post_title = 'うすきツイート：大分県臼杵市'; //タイトル
+	private $post_content = 'Twitterから、本日の気になるツイートです。<br /><!--more-->';
 	private $post_status = 'draft'; //下書き
+	private $post_thumbnail_id = 363;
 
 	//[設定]カテゴリID
-	private $catID = array(28) ;
+	//private $catID = array(28) ;
 	//カスタムタクソノミーのとき(ないときはコメントアウトしてよい)
-	/*private $post_type = "lives"; //デフォルト：post/page/カスタムタクソノミー
+	private $post_type = "lives"; //デフォルト：post/page/カスタムタクソノミー
 	private $tax_cat = "lives-cat";
-	private $tax_ids = array(29); //日付の基準は[0]*/
+	private $tax_ids = array(183); //日付の基準は[0]
 	//ここまで
 
 	//[設定]一度に追加できる記事数（現在の日時よりさかのぼる日数）
@@ -143,14 +156,15 @@ class Paka3_task_tweet{
 				$new_post_date = strtotime( '1day', $post_date );
 				$new_post_datetime = date( 'Y-m-d H:i:s' , $new_post_date  );
 
-				$title = date( '(Y.m.d)',  $new_post_date  );
+				$title = date( '-Y.m.d-',  $new_post_date  );
 				$title = $this->post_title.$title;
 				$html = $this->myTweet( $new_post_date  );
 			  
 			  $newPost = array ('title'       => $title,
 			  									'post_date'   => $new_post_datetime,
 			  									'post_status' => $this->post_status,
-												  'content'     => $html,
+			  									'thumbnail_id' => $this->post_thumbnail_id,
+												  'content'     => $this->post_content.$html,
 												  'post_type' => $this->post_type,
 												  'tax_cat'   => $this->tax_cat,
 												  'tax_ids'   => $this->tax_ids);
@@ -249,7 +263,7 @@ class Paka3_task_tweet{
 		if ( $tweets ) {
 				//ビュークラス
 				$paka3_task_tweet_view = new Paka3_task_tweet_view ;
-				$html = count($tweets).$paka3_task_tweet_view->html_view( 
+				$html = $paka3_task_tweet_view->html_view( 
 						$tweets, 
 						$new_post_date ,
 						$this->t_zone, 

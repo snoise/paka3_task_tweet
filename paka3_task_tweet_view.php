@@ -80,8 +80,7 @@ EOS;
 		//1日の範囲か精査
 		$f_date = strtotime('-1day',$new_post_date);
 		$l_date = $new_post_date;
-			$ndate = date( 'Y年m月d日 H:i', 
-							strtotime( -1*$t_zone.'hour',  $new_post_date ) );
+
 			if( isset($str) 
 				&& $flag[ 'count' ] > $count
 				&& strtotime( -1*$t_zone."hour", $f_date )<= strtotime( $val->created_at ) 
@@ -94,7 +93,7 @@ EOS;
 				$count += 1;
 			}
 		}
-		return $html = "<ul class='paka3Tweet'>".$ndate.implode( '', $html )."</ul>";
+		return $html = "<ul class='paka3Tweet'>".implode( '', $html )."</ul>";
 			
 	}
 

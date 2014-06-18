@@ -49,6 +49,10 @@ class Paka3_post_lib{
 
 		// データベースに投稿を追加
 		$post_id = wp_insert_post( $my_post );
+		//サムネイルを設定した場合
+		if($post['thumbnail_id']) {
+			set_post_thumbnail( $post_id, $post['thumbnail_id'] );
+		}
 		
 		$tax_ids = $post[ 'tax_ids' ] ? $post[ 'tax_ids' ] : array() ;
 		$tax_cat = $post[ 'tax_cat' ] ? $post[ 'tax_cat' ] : "" ;

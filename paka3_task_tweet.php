@@ -20,6 +20,13 @@ class Paka3_task_tweet{
 
 
 	//インスタンス変数（設定）
+	//Twitter API
+	private $apiKey = '' ;
+	private $apiSecret = '' ;
+	private $accessToken = '' ;
+	private $accessTokenSecret = '' ;
+
+
 	//[設定]ツイートの検索設定
 	private $word = '#usuki OR 臼杵 filter:images -RT' ; 
 	//検索の最後に書くと幸せになれるかも
@@ -56,13 +63,6 @@ class Paka3_task_tweet{
 	private $tweet_count     = 100; //ツイートの最大表示数(あくまでも表示)
 	//※すべてが表示されない場合にはこちらを増やすと良い
 	private $tweet_api_limit = 4; //titter apiのアクセスリミット：１００ツイート(RTも含む)/1回、通常180回/15分
-	
-	//Twitter API
-
-	private $apiKey = '' ;
-	private $apiSecret = '' ;
-	private $accessToken = '' ;
-	private $accessTokenSecret = '' ;
 
 
 	//時差

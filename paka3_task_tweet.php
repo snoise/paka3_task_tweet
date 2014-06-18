@@ -18,33 +18,45 @@ if(!function_exists('wp_get_current_user')) {
 
 class Paka3_task_tweet{
 
+
 	//インスタンス変数（設定）
+	//[設定]ツイートの検索設定
+	private $word = '#usuki OR 臼杵 filter:images -RT' ; 
+	//検索の最後に書くと幸せになれるかも
+	//-RT　RTをのぞく場合 
+	//filter:images　画像ツイートを抽出、
+	//filter:news　ニュース引用ツイートを抽出、
+	//filter:replies　返信ツイートを抽出、
+	//filter:videos　動画ツイートを抽出。
+
+	//[設定]実行スケジュール
 	private $t = "00:35:00" ;
-	private $catID = "" ;
 
-	private $post_statur = 'draft'; //下書き
+	//[設定]タイトルと状態
+	private $post_title = 'きょうのつぶやき'; //タイトル
+	private $post_status = 'draft'; //下書き
+
+	//[設定]カテゴリID
+	private $catID = array(28) ;
 	//カスタムタクソノミーのとき(ないときはコメントアウトしてよい)
-	private $post_type = "lives"; //デフォルト：post/page/カスタムタクソノミー
+	/*private $post_type = "lives"; //デフォルト：post/page/カスタムタクソノミー
 	private $tax_cat = "lives-cat";
-	private $tax_ids = array(29); //日付の基準は[0]
+	private $tax_ids = array(29); //日付の基準は[0]*/
 	//ここまで
-	
-	//ツイートの検索設定
-	private $word = '#usuki OR 臼杵 filter:images -RT' ; //(RTをのぞく場合 -RT)
-//最後に書くよ
-//filter:images　画像ツイートを抽出、
-//filter:news　ニュース引用ツイートを抽出、
-//filter:replies　返信ツイートを抽出、
-//filter:videos　動画ツイートを抽出。
 
-	private $lang = "ja" ;
+	//[設定]一度に追加できる記事数（現在の日時よりさかのぼる日数）
+	private $tweet_day_limit = 5; //
+
+	//[設定]表示設定
 	private $imgMode = 0 ; //:0普通/1画像一覧表示
-	private $sort    = "asc" ;
+	private $sort    = "asc" ; //並び順
+	private $lang = "ja" ;
 
-	//やっぱり最大値はいるよツイート
+	//[設定]表示数
 	private $tweet_count     = 100; //ツイートの最大表示数(あくまでも表示)
-	private $tweet_api_limit = 6; //titter apiのアクセスリミット：１００ツイート(RTも含む)/1回、通常180回/15分
-	private $tweet_day_limit = 5; //一度に追加できる記事数（現在の日時よりさかのぼる日数）
+	//※すべてが表示されない場合にはこちらを増やすと良い
+	private $tweet_api_limit = 4; //titter apiのアクセスリミット：１００ツイート(RTも含む)/1回、通常180回/15分
+	
 	//Twitter API
 
 	private $apiKey = '' ;
@@ -131,7 +143,8 @@ class Paka3_task_tweet{
 				$new_post_date = strtotime( '1day', $post_date );
 				$new_post_datetime = date( 'Y-m-d H:i:s' , $new_post_date  );
 
-				$title = date( 'Y月m日d日のつぶやき',  $new_post_date  );
+				$title = date( '(Y.m.d)',  $new_post_date  );
+				$title = $this->post_title.$title;
 				$html = $this->myTweet( $new_post_date  );
 			  
 			  $newPost = array ('title'       => $title,

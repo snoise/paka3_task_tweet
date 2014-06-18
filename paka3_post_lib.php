@@ -35,7 +35,7 @@ class Paka3_post_lib{
 	//######################
 	//新規投稿の関数
 	//######################
-	public function new_my_post($post, $catID = ""  ) {
+	public function new_my_post($post, $catID = array()  ) {
 		$my_post = array( );
 		$my_post[ 'post_title' ] = $post['title'];
 		$my_post[ 'post_content' ] =  str_replace(array("\r\n","\r","\n"), '', $post['content']);
@@ -43,7 +43,7 @@ class Paka3_post_lib{
 		$my_post[ 'post_author' ] = 1;
 		$my_post[ 'post_name' ] = date( 'YmdHi_tweet' ,strtotime($post['post_date'] ) ) ;//slug
 		$my_post[ 'post_date' ] = $post['post_date'];
-		$my_post[ 'post_category' ] = array( $catID );
+		$my_post[ 'post_category' ] =  $catID ;
 		//カスタムタクソノミー設定//デフォルトpost
 		$my_post[ 'post_type' ] = $post[ 'post_type' ] ? $post[ 'post_type' ] : "post" ;
 

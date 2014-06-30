@@ -21,22 +21,13 @@ class Paka3_task_tweet{
 
 	//インスタンス変数（設定）
 	//Twitter API
-	/*
-	private $apiKey = 'zSmBXlxEoaTrwOX23Hdtbrt0W' ;
-	private $apiSecret = 'TPORUQAxuTsicmje6mESheJZ3DkJ1ZoLpz7LsjANKHyyfSMYdN' ;
-	private $accessToken = '1098563582-aQ7ngZjfCw0eHkph3cdItRmpyEcOHdSEnmDTkZT' ;
-	private $accessTokenSecret = 'KUReVeDvn8CyWzDbkiCAi7xiw6dHAI0BCJH4Tihu0tXHN' ;
-*/
-	private $apiKey = '9qNoNnHgRqfQ3FU2M0kDRj7vL' ;
-	private $apiSecret = 'wi6jCMOHYhpHFgooW9PCI9YwL7hQurocZuw6GCVLedgMfXqQj2' ;
-	private $accessToken = '1098563582-eLb4iZ0lpDgz7fxeoLmlaFivKwLrv4eAREydsuo' ;
-	private $accessTokenSecret = 'ksHNdcJnKM5qbiwM9pbfLbnYWd2mChn9156Q5ERWBX5oq' ;
-/*
+
+
 	private $apiKey = '' ;
 	private $apiSecret = '' ;
 	private $accessToken = '' ;
 	private $accessTokenSecret = '' ;
-*/
+
 
 	//[設定]ツイートの検索設定
 	private $word = '#usuki OR 臼杵 filter:images -RT' ; 
@@ -48,7 +39,7 @@ class Paka3_task_tweet{
 	//filter:videos　動画ツイートを抽出。
 
 	//[設定]実行スケジュール
-	private $t = "11:30:00" ;
+	private $t = "9:20:00" ;
 
 	//[設定]タイトルと状態
 	private $post_title = 'うすきツイート：大分県臼杵市'; //タイトル
@@ -64,8 +55,6 @@ class Paka3_task_tweet{
 	private $tax_ids = array(183); //日付の基準は[0]
 	//ここまで
 
-	//[設定]一度に追加できる記事数（現在の日時よりさかのぼる日数）
-	private $tweet_day_limit = 5; //
 
 	//[設定]表示設定
 	private $imgMode = 0 ; //:0普通/1画像一覧表示
@@ -74,12 +63,17 @@ class Paka3_task_tweet{
 
 	//[設定]表示数
 	private $tweet_count     = 100; //ツイートの最大表示数(あくまでも表示)
+
+	//*設定画面なし:チューニングが必要な場合に設定する*/
+	//[設定]一度に追加できる記事数（現在の日時よりさかのぼる日数）
+	private $tweet_day_limit = 5; //
+	//[設定]表示数
 	//※すべてが表示されない場合にはこちらを増やすと良い
 	private $tweet_api_limit = 4; //titter apiのアクセスリミット：１００ツイート(RTも含む)/1回、通常180回/15分
 
-
 	//時差
 	private $t_zone ;
+	private $hook_name = "paka3_task_tweet_hook";
 
 	//######################
 	//コンストラクタ
@@ -87,46 +81,124 @@ class Paka3_task_tweet{
 	function __construct(){
 		require_once( "twitteroauth/twitteroauth.php" );
 		require_once( "paka3_post_lib.php" );
+		require_once( "paka3_task_lib.php" );
 		require_once( "paka3_task_tweet_view.php" );
+		require_once( "paka3_task_tweet_admin.php" );
+
+		//funcで呼び出しても良いかも
+		$this->tweet_task_var( );
 
 		//時差を求める
 		$this->t_zone = floor(( current_time( 'timestamp' ) - time( ) ) / 3600);
 		//プラグインを有効化したとき
-		if(function_exists('register_activation_hook')) {
+		if ( function_exists( 'register_activation_hook' ) ) {
 			register_activation_hook (__FILE__ , array( $this , 'paka3_plugin_start' ) ) ;
 		}
 		//プラグインをストップしたとき
-		if(function_exists('register_deactivation_hook')) {
+		if ( function_exists( 'register_deactivation_hook') ) {
 			register_deactivation_hook (__FILE__ , array( $this , 'paka3_plugin_stop' ) ) ;
 		}
+		//プラグインを削除したとき
+		if ( function_exists( 'register_uninstall_hook') ) {
+			register_uninstall_hook(__FILE__, 'paka3_plugin_uninstall');
+		}
+		
+
+
 		add_action( 'paka3_task_tweet_hook', array( $this , 'paka3_task_post_function' ) ) ;
 		add_action( 'wp_enqueue_scripts' , array( 'Paka3_task_tweet_view' , 'post_css' ) ) ;
+
+		//管理画面メニューの追加
+		$addmin_menu = new paka3_task_tweet_admin;
 	}
+
+	function tweet_task_var (){
+		$tasktweet = get_option('paka3_task_tweet');
+		if( isset( $tasktweet ) ){
+			$this->apiKey = $tasktweet[ 'apiKey' ] ? $tasktweet[ 'apiKey' ] : $this->apiKey;
+			$this->apiSecret = $tasktweet[ 'apiSecret' ] ? $tasktweet[ 'apiSecret' ] : $this->apiSecret;
+			$this->accessToken = $tasktweet[ 'accessToken' ] ? $tasktweet[ 'accessToken' ] : $this->accessToken;
+			$this->accessTokenSecret = $tasktweet[ 'accessTokenSecret' ] ? $tasktweet[ 'accessTokenSecret' ] : $this->accessTokenSecret;
+
+			//表示設定
+			$this->imgMode = $tasktweet[ 'imgMode' ] ? $tasktweet[ 'imgMode' ] : $this->imgMode;
+			$this->sort = $tasktweet[ 'sort' ] ? $tasktweet[ 'sort' ] : $this->sort;
+			$this->lang = $tasktweet[ 'lang' ] ? $tasktweet[ 'lang' ] : $this->lang;
+
+			//検索ワードと時間
+			$this->word = $tasktweet[ 'word' ] ? $tasktweet[ 'word' ] : $this->word;
+			$this->t = $tasktweet[ 't' ] ? $tasktweet[ 't' ] : $this->t; 
+
+			//タイトル・本文・状態・サムネイル
+			$this->post_title = $tasktweet[ 'post_title' ] ? $tasktweet[ 'post_title' ] : $this->post_title;
+			$this->post_content = $tasktweet[ 'post_content' ] ? $tasktweet[ 'post_content' ] : $this->post_content;
+			$this->post_status = $tasktweet[ 'post_status' ] ? $tasktweet[ 'post_status' ] : $this->post_status;
+			$this->post_thumbnail_id = $tasktweet[ 'post_thumbnail_id' ] ? $tasktweet[ 'post_thumbnail_id' ] : $this->post_thumbnail_id;
+
+			//カテゴリの設定
+			$this->catID = $tasktweet[ 'catID' ] ? $tasktweet[ 'catID' ] : $this->catID;
+			$this->post_type = $tasktweet[ 'post_type' ] ? $tasktweet[ 'post_type' ] : $this->post_type;
+			$this->tax_cat = $tasktweet[ 'tax_cat' ] ? $tasktweet[ 'tax_cat' ] : $this->tax_cat;
+			$this->tax_ids = $tasktweet[ 'tax_ids' ] ? $tasktweet[ 'tax_ids' ] : $this->tax_ids;
+			$this->tweet_count = $tasktweet[ 'tweet_count' ] ? $tasktweet[ 'tweet_count' ] : $this->tweet_count;
+		}
+
+	}
+
 
 	//######################
 	//プラグインを有効化したときに呼ばれる関数
 	//######################
 	function paka3_plugin_start(){
-		//(今日から)毎日タスクを実行する時間を設定する
-		//管理＞設定されたタイムゾーンでの時間を設定する(13:00)
-		$my_time = date( 'Y-m-d '.$this->t, current_time( 'timestamp' ) );
-		//時差を引いて、UNIX時間(UTC:秒)に合わせる
-		$task_time = strtotime( -1 * $this->t_zone." hour", strtotime( $my_time ) );
-		wp_schedule_event( $task_time, 'daily', paka3_task_tweet_hook );
+		update_option('paka3_task_tweet_hook_name', $this->hook_name);
+		//初期登録（消しても良いかも）
+		$opt = array("t" => $this->t,
+						"word" => $this->word,
+						"imgMode" => $this->imgMode,
+						"sort" => $this->sort,
+						"lang" => $this->lang,
+						"post_title" => $this->post_title,
+						"post_content" =>  $this->post_content,
+						"post_status" => $this->post_status,
+						"post_thumbnail_id" => $this->post_thumbnail_id,
+						"catID" => $this->catID,
+						"post_type" => $this->post_type,
+						"tax_cat" => $this->tax_cat,
+						"tax_ids" => $this->tax_ids,
+						"tweet_count" => $this->tweet_count,
+						"apiKey" => $this->apiKey,
+						"apiSecret" => $this->apiSecret,
+						"accessToken" => $this->accessToken,
+						"accessTokenSecret" => $this->accessTokenSecret,
+						);
+		update_option('paka3_task_tweet',$opt);
 	}
+
 
 	//######################
 	//プラグインをストップしたときに呼ばれる関数
 	//######################
 	function paka3_plugin_stop(){
-		wp_clear_scheduled_hook( 'paka3_task_tweet_hook' );
+		$hook = get_option('paka3_task_tweet_hook_name'); 
+		wp_clear_scheduled_hook( $hook  );
+		//delete_option('paka3_task_tweet_hook_name');
+		//delete_option('paka3_task_tweet');
 	}
 
-
+	//######################
+	//プラグインを削除したときによばれる
+	//######################
+	function paka3_plugin_uninstall(){
+		$hook = get_option('paka3_task_tweet_hook_name'); 
+		wp_clear_scheduled_hook( $hook  );
+		delete_option('paka3_task_tweet_hook_name');
+		delete_option('paka3_task_tweet');
+	}
 	//######################
 	//実行する処理
 	//######################
 	function paka3_task_post_function() {
+
 			//現在の日付
 			$now_date = current_time( 'timestamp' );
 			//既存の最新の記事の日付
@@ -138,6 +210,7 @@ class Paka3_task_tweet{
 			}else{
 					$post_date = strtotime( '-1day', current_time( 'timestamp' ) );
 			}
+
 			//スケジュールの時間調整
 			$post_datetime = date( 'Y-m-d '.$this->t, $post_date  );
 			$post_date = strtotime( $post_datetime );
@@ -158,8 +231,14 @@ class Paka3_task_tweet{
 
 				$title = date( '-Y.m.d-',  $new_post_date  );
 				$title = $this->post_title.$title;
-				$html = $this->myTweet( $new_post_date  );
-			  
+				//データ取得
+				$tweet = $this->myTweet( $new_post_date  );
+			  $html = $tweet[ 'imgUrl' ][2].$tweet[ 'html' ];
+				//$post_thumbnail_id = $paka3_post_lib->url_to_media( $tweet[ 'imgUrl' ][0] );
+				//if($post_thumbnail_id && ! is_wp_error( $post_thumbnail_id )){
+				//	$this->post_thumbnail_id = $post_thumbnail_id;
+				//}
+
 			  $newPost = array ('title'       => $title,
 			  									'post_date'   => $new_post_datetime,
 			  									'post_status' => $this->post_status,
@@ -173,7 +252,12 @@ class Paka3_task_tweet{
 				/*****/
 				
 
-				$res = $paka3_post_lib->new_my_post( $newPost, $this->catID );
+				$post_id = $paka3_post_lib->new_my_post( $newPost, $this->catID );
+				//サムネイル設定
+				if($post_id){
+					$img_id = $paka3_post_lib->url_to_media( $post_id , $tweet[ 'imgUrl' ][0] );
+					set_post_thumbnail( $post_id, $img_id );
+				}
 				//
 				
 				$post_date = $new_post_date;
@@ -268,6 +352,7 @@ class Paka3_task_tweet{
 						$new_post_date ,
 						$this->t_zone, 
 						$flag );
+				//$html = array('html'=>"","imgUrl"=>array())
 		} else {
 				$html = false;
 		}

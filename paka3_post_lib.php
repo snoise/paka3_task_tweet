@@ -6,6 +6,7 @@ class Paka3_post_lib{
 	//コンストラクタ
 	//######################
 	function __construct(){
+		require_once( ABSPATH . 'wp-admin/includes/image.php' );
 	}
 
 	//##########################
@@ -63,5 +64,82 @@ class Paka3_post_lib{
 			 return false;
 		}
 	}
+
+	//######################
+	//urlからメディア登録する
+	//######################
+	public function url_to_media($post_id,$url){
+		if($url){
+			$data = file_get_contents($url);
+			$upPath = wp_upload_dir();
+			//ファイル名を取得
+			$filename = $this->getFileName($url);
+			$imgPath = $upPath['path'].'/'.$filename;
+			$imgURL = $upPath['url'].'/'.$filename;;
+			//ファイルを保存
+			file_put_contents($imgPath,$data);
+			//メディア登録
+			$imgID = $this->mediaCreate( $imgPath , $imgURL , $post_id);
+			//サムネイル構成
+			$this->paka3_reImg( $imgID , $imgPath );
+			
+			return $imgID ;
+		}
+	}
+	//######################
+	//URLから画像ファイルの「名前」を生成
+	//######################
+	private function getFileName($url){  
+		$path = getImageSize($url);  
+		$d=date("U");
+		$res = false;
+		if(preg_match('/jpeg/',$path['mime'])){
+				$res = $d.'.jpg';
+		} elseif(preg_match('/png/',$path['mime'])) {
+				$res = $d.'.png';
+		} elseif(preg_match('/gif/',$path['mime'])){
+				$res = $d.'.gif';
+		}
+		return $res;
+	} 
+
+	//######################
+	//画像を新規登録
+	//######################
+	private function mediaCreate($imgPath, $imgURL , $post_id){
+		if($imgPath){
+			//同一ディレクトリに保存
+			$wp_filetype = wp_check_filetype(basename($imgPath), null );
+
+			$attachment = array(
+				'guid'  => $imgURL,
+				'post_mime_type' => $wp_filetype['type'],
+				'post_title' => preg_replace('/\.[^.]+$/', '', basename($imgPath)),
+				'post_content' => '',
+				'post_status' => 'inherit'
+			);
+				$imgID = wp_insert_attachment( $attachment,  $imgPath , $post_id );
+			}else{
+				//$this->str.="作成失敗<br />";
+				$imgID = false;
+			}
+		return $imgID;
+  }
+
+	public function paka3_reImg ( $imgID , $imgPath ) {
+
+			$metadata = wp_generate_attachment_metadata( $imgID , $imgPath );
+			if (!empty( $metadata ) && ! is_wp_error( $metadata ) ) {
+				wp_update_attachment_metadata( $imgID , $metadata );
+				update_attached_file( $imgID , $imgPath );
+				//$str .= '画像の再構成が実行されました<br />';
+				$flag=true;
+			}else{
+				//$str .= "ID".$imgID."は、再構成されませんでした（エラー）。<br />";
+  	    $flag=false;
+			}
+			return $flag;
+  }
+
 
 }//class

@@ -12,7 +12,8 @@ class Paka3_task_tweet_view{
 	//##########################
 	function html_view( $tweets, $new_post_date , $t_zone , $flag ) {
 		$html = array( );
-		$count = 0;
+		$imgArray = array( ); //サムネイル画像に設定する予定の配列
+		$count = 0;$t_id_check = ""; 
 		foreach ( $tweets as $key => $val ) {
 			$str=""; //html
 			//1.ユーザ名
@@ -22,12 +23,14 @@ class Paka3_task_tweet_view{
 			//3.ユーザURL
 			$user_url= 'https://twitter.com/'.$val->user->screen_name;
 			//4.画像
-			$img="";
+			$img="";$imgURL="";
 			if( $val->entities->media ) {
 				foreach( $val->entities->media as $imgObj ) {
 					$img .= $imgObj->media_url ? "<img class='img' src=".$imgObj->media_url."/>" : "";
+					$imgURL = $imgObj->media_url ;
 				}
 			}
+
 			//5.日付
 			$date = date( 'Y年m月d日 H:i', 
 							strtotime( $t_zone.'hour', strtotime( $val->created_at ) ) );
@@ -66,9 +69,9 @@ class Paka3_task_tweet_view{
 				$str =<<< EOS
 				<li>
 					<ul class="twt">
-						<li>{$img}</li>
+						<li><a rel="nofollow" href="{$link}" target="_blank">{$img}</a></li>
 						<li class="profile"><a rel="nofollow" href="{$user_url}">{$p_img}{$user_name}<b>{$user_account}</b></a></li>
-						<li class="tweet">{$tweet}<a href="{$link}" rel="nofollow" class="date">{$date}</a></li>
+						<li class="tweet">{$tweet}<a href="{$link}" rel="nofollow" class="date">{$date} 参照元:twitter.com</a></li>
 					</ul></li>
 EOS;
 			}elseif( $flag['imgMode'] == 1 ) {
@@ -83,18 +86,23 @@ EOS;
 
 			if( isset($str) 
 				&& $flag[ 'count' ] > $count
+				&& $t_id != $t_id_check
 				&& strtotime( -1*$t_zone."hour", $f_date )<= strtotime( $val->created_at ) 
 				&& strtotime( -1*$t_zone."hour", $l_date  ) > strtotime( $val->created_at ) ) {
 				if( $flag[ 'sort' ] == "asc" ) {
 					array_unshift( $html, $str );
+					array_unshift( $imgArray, $imgURL );
 				}elseif( $flag[ 'sort' ] == "desc" ){
 					array_push( $html, $str );
+					array_push( $imgArray, $imgURL );
 				}
+				$t_id_check = $t_id ;
 				$count += 1;
 			}
 		}
-		return $html = "<ul class='paka3Tweet'>".implode( '', $html )."</ul>";
-			
+		$html = "<ul class='paka3Tweet'>".implode( '', $html )."</ul>";
+		return array('html' => $html,
+								 'imgUrl' => $imgArray );
 	}
 
 	function post_css() {

@@ -22,12 +22,10 @@ class Paka3_task_tweet{
 	//インスタンス変数（設定）
 	//Twitter API
 
-
 	private $apiKey = '' ;
 	private $apiSecret = '' ;
 	private $accessToken = '' ;
 	private $accessTokenSecret = '' ;
-
 
 	//[設定]ツイートの検索設定
 	private $word = '#usuki OR 臼杵 filter:images -RT' ; 
@@ -79,7 +77,9 @@ class Paka3_task_tweet{
 	//コンストラクタ
 	//######################
 	function __construct(){
-		require_once( "twitteroauth/twitteroauth.php" );
+		if ( !class_exists('TwitterOAuth') ) {
+			require_once( "twitteroauth/twitteroauth.php" );
+		}
 		require_once( "paka3_post_lib.php" );
 		require_once( "paka3_task_lib.php" );
 		require_once( "paka3_task_tweet_view.php" );
@@ -294,6 +294,7 @@ class Paka3_task_tweet{
 											strtotime( -1*$this->t_zone."hour + 1day", $new_post_date ) );
 
 
+
 		//######################
 		//指定日前々日の最後を取得（ただし時差なし）
 		$first = $this->searchTweetFunc( $obj, 
@@ -306,9 +307,10 @@ class Paka3_task_tweet{
 		
 		//######################
 		//指定日の最後を取得（ただし時差なし）
+		//countをfirstとlastで変更しているのはuntilのキャッシュ対策2014/8/1以降
 		$last = $this->searchTweetFunc( $obj, 
 														array_merge( $arrayData, array( 
-																		'count' => 1, 
+																		'count' => 2, 
 																		'until' => $untilDate, 
 																		 ) )
 																 );
@@ -365,6 +367,7 @@ class Paka3_task_tweet{
 	//##########################
 	function searchTweetFunc( $obj, $array=array( 'count' => 20 ) ) {
 			//Tweet取得
+
 			$req = $obj->OAuthRequest( 'https://api.twitter.com/1.1/search/tweets.json', 
 																'GET', 
 																$array );
